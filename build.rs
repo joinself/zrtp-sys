@@ -43,18 +43,38 @@ fn main() {
         .file("vendor/zrtp/crypto/skein256.cpp")
         .file("vendor/zrtp/crypto/skeinMac384.cpp")
         .file("vendor/zrtp/crypto/skein384.cpp")
+        .file("vendor/zrtp/crypto/aesCFB.cpp")
+        .file("vendor/zrtp/crypto/twoCFB.cpp")
         .file("vendor/zrtp/ZIDCacheFile.cpp")
         .file("vendor/zrtp/ZIDRecordFile.cpp")
+        .file("vendor/cryptcommon/macSkein.cpp")
+        .file("vendor/cryptcommon/ZrtpRandom.cpp")
+
+        
+        
+        .file("vendor/cryptcommon/skein.c")
+        .file("vendor/cryptcommon/skein_block.c")
+        .file("vendor/cryptcommon/skeinApi.c")
+        .file("vendor/cryptcommon/twofish.c")
+        .file("vendor/cryptcommon/twofish_cfb.c")
+        
+        .file("vendor/cryptcommon/aescrypt.c")
+        .file("vendor/cryptcommon/aeskey.c")
+        .file("vendor/cryptcommon/aestab.c")
+        .file("vendor/cryptcommon/aes_modes.c")
+        
+        
+
         .compile("zrtp");
 
-    println!("cargo:rerun-if-changed=zrtp.hpp");
+    println!("cargo:rerun-if-changed=zrtp.h");
 
     // generate the bindings for zrtp headers
     let bindings = bindgen::Builder::default()
         .clang_arg("-Ivendor/")
         .clang_arg("-Ivendor/zrtp/")
         .clang_arg("-Ivendor/zrtp/crypto")
-        .header("zrtp.hpp")
+        .header("zrtp.h")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()
         .expect("Unable to generate zrtp bindings");
