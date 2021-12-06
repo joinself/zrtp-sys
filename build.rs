@@ -11,6 +11,7 @@ fn main() {
 
     cc::Build::new()
     	.cpp(true)
+        .flag("-std=c++11")
         .flag("-Wno-unknown-pragmas")
         .include(zrtp_includes)
         .include(common_includes)
