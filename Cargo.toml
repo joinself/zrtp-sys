@@ -8,7 +8,6 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-openssl = { version = "0.10", features = ["vendored"] }
 
 [build-dependencies]
 cc = "1.0"
