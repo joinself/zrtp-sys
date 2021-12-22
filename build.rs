@@ -3,6 +3,8 @@ extern crate bindgen;
 use std::env;
 use std::path::Path;
 use std::path::PathBuf;
+use std::fs::{OpenOptions};
+use std::io::{Write};
 
 fn main() {
     let zrtp_includes = Path::new("vendor/zrtp/");
@@ -10,6 +12,19 @@ fn main() {
     let crypto_includes = Path::new("vendor/zrtp/crypto/");
     let bn_crypto_includes = Path::new("vendor/bnlib/");
     let common_crypto_includes = Path::new("vendor/cryptcommon/");
+
+    // add a typedef for uint
+    let zrtp_cpp = std::fs::read_to_string("vendor/zrtp/ZRtp.cpp").unwrap();
+    let updated_zrtp_cpp = zrtp_cpp
+        .replace("using namespace GnuZrtpCodes;", "using namespace GnuZrtpCodes;\n\n#ifndef uint\n#define uint unsigned int\n#endif");
+
+    let mut zrtp_cpp_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open("vendor/zrtp/ZRtp.cpp")
+        .unwrap();
+
+    zrtp_cpp_file.write(updated_zrtp_cpp.as_bytes()).unwrap();
 
     cc::Build::new()
         .warnings(false)
