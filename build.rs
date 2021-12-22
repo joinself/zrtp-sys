@@ -1,30 +1,39 @@
 extern crate bindgen;
 
 use std::env;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use std::fs::{OpenOptions};
-use std::io::{Write};
 
 fn main() {
+    let target = env::var("TARGET").unwrap();
+    let mut clang_flags = Vec::<String>::new();
+
     let zrtp_includes = Path::new("vendor/zrtp/");
     let common_includes = Path::new("vendor/");
     let crypto_includes = Path::new("vendor/zrtp/crypto/");
     let bn_crypto_includes = Path::new("vendor/bnlib/");
     let common_crypto_includes = Path::new("vendor/cryptcommon/");
 
-    // add a typedef for uint
-    let zrtp_cpp = std::fs::read_to_string("vendor/zrtp/ZRtp.cpp").unwrap();
-    let updated_zrtp_cpp = zrtp_cpp
-        .replace("using namespace GnuZrtpCodes;", "using namespace GnuZrtpCodes;\n\n#ifndef uint\n#define uint unsigned int\n#endif");
+    if target == "wasm32-unknown-emscripten" {
+        // add a typedef for uint
+        let zrtp_cpp = std::fs::read_to_string("vendor/zrtp/ZRtp.cpp").unwrap();
+        let updated_zrtp_cpp = zrtp_cpp.replace(
+            "using namespace GnuZrtpCodes;",
+            "using namespace GnuZrtpCodes;\n\n#ifndef uint\n#define uint unsigned int\n#endif",
+        );
 
-    let mut zrtp_cpp_file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open("vendor/zrtp/ZRtp.cpp")
-        .unwrap();
+        let mut zrtp_cpp_file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open("vendor/zrtp/ZRtp.cpp")
+            .unwrap();
 
-    zrtp_cpp_file.write(updated_zrtp_cpp.as_bytes()).unwrap();
+        zrtp_cpp_file.write(updated_zrtp_cpp.as_bytes()).unwrap();
+
+        clang_flags.push(String::from("-fvisibility=default"));
+    }
 
     cc::Build::new()
         .warnings(false)
@@ -63,7 +72,7 @@ fn main() {
         .compile("zrtpcrypto");
 
     cc::Build::new()
-    	.cpp(true)
+        .cpp(true)
         .flag("-std=c++11")
         .warnings(false)
         .include(zrtp_includes)
@@ -115,7 +124,13 @@ fn main() {
     println!("cargo:rerun-if-changed=zrtp.h");
 
     // generate the bindings for zrtp headers
-    let bindings = bindgen::Builder::default()
+    let mut builder = bindgen::Builder::default();
+
+    for value in &clang_flags {
+        builder = builder.clang_arg(value);
+    }
+
+    let bindings = builder
         .clang_arg("-Ivendor/")
         .clang_arg("-Ivendor/zrtp/")
         .clang_arg("-Ivendor/zrtp/crypto/")
