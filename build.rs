@@ -147,7 +147,7 @@ fn main() {
         .allowlist_var(r"Zrtp.*")
         .allowlist_var(r"ZRTP.*")
         .header("zrtp.h")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Unable to generate zrtp bindings");
 
